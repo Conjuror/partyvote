@@ -16,14 +16,14 @@ app.controller('MainCtrl', function ($scope) {
   function onChange() {
     var id = this.id;
     var party = $scope.parties[id];
-    var total = 0.0;
-    var advancedTotal = 0.0;
+    var total = 0.00;
+    var advancedTotal = 0.00;
     parties.forEach(function(party) {
       if (party.id !== 'remain') {
         total += party.value;
       }
     });
-    $scope.parties.remain.value = (100 - total).toFixed(1);
+    $scope.parties.remain.value = 100 - total;
     
     if ($scope.parties.remain.value < 0) {
       party.value = parseFloat(party.value) + parseFloat($scope.parties.remain.value);
@@ -37,17 +37,27 @@ app.controller('MainCtrl', function ($scope) {
       }
     });
     
+    var givenSeats = 0;
     parties.forEach(function(party) {
       if (party.win) {
-        party.advancedValue = (parseFloat(party.value) * (100 / advancedTotal)).toFixed(1);
-        party.seats = Math.round(totalSeats * (party.advancedValue / 100));
+        party.advancedValue = Math.floor((parseFloat(party.value) * (100 / advancedTotal))*100)/100;
+        party.seats = Math.floor(totalSeats * (party.advancedValue / 100));
+        givenSeats += party.seats;
       }
       else {
         party.advancedValue = 0;
         party.seats = 0;
       }
-    })
+    });
     
+    if (givenSeats < totalSeats) {
+      parties.sort(function (a, b) {
+        return b.seats - a.seats;
+      });
+      for (i = 0 ; givenSeats < totalSeats ; i++, givenSeats++) {
+        parties[i].seats += 1;
+      }
+    }
   }
   
   parties.forEach(function(party) {
@@ -58,8 +68,8 @@ app.controller('MainCtrl', function ($scope) {
     party.options = {
       id: party.id,
       ceil: 100,
-      precision: 1,
-      step: 0.1,
+      precision: 2,
+      step: 0.01,
       vertical: true,
       readOnly: party.id === 'remain',
       onChange: onChange,
